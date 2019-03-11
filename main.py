@@ -12,8 +12,8 @@ class Display:
 		self.spacewalk=np.array([0,0])
 
 	def initdisplayvar(self):
-		self.winx = 1000
-		self.winy = 800 
+		self.winx = 800
+		self.winy = 800
 		self.stopgame = False
 
 	def init_event_variables(self):
@@ -24,8 +24,11 @@ class Display:
 		self.wkdo = False;
 		self.wklf = False;
 		self.wkrh = False;
+		self.m_W_player = False;
+		self.m_S_player = False;
 		self.r_L_player = False;
 		self.r_R_player = False;
+		self.setorbital = False
 		pass;
 
 	def setplanets(self):
@@ -33,12 +36,15 @@ class Display:
 		PG = PlanetGenerator()
 		for i in PG.planets:
 			self.planets.add(i)
-
+			print(i.pos)
 		#self.testplanet = Planet((0,0))
 		#self.testgroup = py.sprite.Group();
 		#self.testgroup.add(self.testplanet)
 	def sethero(self):
-		self.player = Player();
+		i=None
+		for i in self.planets:
+			break;
+		self.player = Player((i.rect.x,i.rect.y));
 		self.hero.add(self.player)
 
 	def sprites_handler(self):
@@ -64,7 +70,13 @@ class Display:
 					self.r_L_player = True;
 				if event.key == py.K_d:
 					self.r_R_player = True;
-					
+				if event.key == py.K_w:
+					self.m_W_player = True;
+				if event.key == py.K_s:
+					self.m_S_player = True;
+				if event.key == py.K_o:
+					self.setorbital = True;
+
 			if event.type == 3:
 				if event.key == py.K_UP:
 					self.wkup = False;
@@ -78,7 +90,35 @@ class Display:
 					self.r_L_player = False;
 				if event.key == py.K_d:
 					self.r_R_player = False;
-				
+				if event.key == py.K_w:
+					self.m_W_player = False;
+				if event.key == py.K_s:
+					self.m_S_player = False;
+				if event.key == py.K_q:
+					self.stopgame = True
+				if event.key == py.K_o:
+					self.setorbital = False;
+
+	def affectgravity(self):
+		nonthingtrue = True
+		for i in self.planets:
+			r = i.pos - self.player.pos
+			dis = np.linalg.norm(r)
+
+			print(dis)
+			if((dis > 1010 and dis < 1600) and (not self.player.stopgravity) ):
+				#print(dis)
+				g = i.mass/(dis)**2
+				g_vec = g*r/dis;
+				self.player.vel += g_vec*0.01
+				#print(np.sqrt(i.mass/dis))
+				if self.setorbital:
+					#print(self.setorbital,"Worked")
+					self.player.setvelocity(np.sqrt(i.mass/dis))
+					self.setorbital = False;
+			if dis <= 1010:
+				self.player.landed = True
+		
 	def respondevents(self):
 		mpt = [0,0]
 		if self.wkup:
@@ -89,18 +129,35 @@ class Display:
 			mpt[0]=-100
 		if self.wkrh:
 			mpt[0]=100
+
+		if self.m_W_player or self.m_S_player:
+			if self.m_W_player:
+				self.player.accelerate()
+				#print("accelerate")
+		
+			if self.m_S_player:
+				#print("decelerate")
+				self.player.decelerate()
+		else:
+			self.player.stopaccelerate()
+
+
 		if self.r_L_player:
-			self.player.rotate(True)
-		elif self.r_R_player:
 			self.player.rotate(False)
+		elif self.r_R_player:
+			self.player.rotate(True)
 		
 		if not(self.r_L_player or self.r_R_player):
 			self.player.stoprotate();
+		
+
 
 		#print(mpt)
-		self.planets.update(mpt)
+		self.planets.update(1,mpt)
+		self.planets.update(2,self.player.pos)
 		self.hero.update();
 		#self.testgroup.update(mpt)
+
 	def draw(self):
 		#py.draw.circle(self.win,(255,255,255),(int(self.winx/2),int(self.winy/2) ),30,30)
 		self.planets.draw(self.win)
@@ -118,10 +175,12 @@ class Display:
 			self.eventhandler()
 			self.respondevents()
 			for i in self.planets:
-				print(i.rect.x,i.rect.y)
+				#print(np.array(self.player.pos),np.array([i.rect.x,i.rect.y]))
 				break;
+
 			self.draw();
-			
+
+			self.affectgravity()
 			py.display.update();
 
 

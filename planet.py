@@ -4,7 +4,7 @@ G = 5
 class Planet(py.sprite.Sprite):
 	def __init__(self,pos):
 		super().__init__();
-		self.mass = 0;
+		self.mass = 1000000;
 		self.pos = np.array(pos);
 		self.radius = 1000
 		self.color=(0,255,0)
@@ -18,9 +18,14 @@ class Planet(py.sprite.Sprite):
 		py.draw.circle(self.image,color,(self.radius,self.radius),self.radius,self.radius);
 		self.mask = py.mask.from_surface(self.image);
 
-	def update(self,pos):
-		self.rect.x-=pos[0]
-		self.rect.y-=pos[1]
+	def update(self,cond,pos):
+		if cond == 1:
+			self.rect.x-=(pos[0]+self.radius)
+			self.rect.y-=(pos[1]+self.radius)
+
+		elif cond == 2:
+			self.rect.x = self.pos[0]-(pos[0]) -475
+			self.rect.y = self.pos[1]-(pos[1]) -465
 
 class PlanetGenerator:
 	def __init__(self):
@@ -30,7 +35,7 @@ class PlanetGenerator:
 		x_list=[x-5 for x in range(10)]
 		y_list=[y-5 for y in range(10)]
 
-		print(x_list,y_list)
+		
 		
 		for i in range(self.nplanets):
 			x = np.random.choice(x_list)
