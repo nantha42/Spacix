@@ -1,5 +1,6 @@
 import pygame as py 
 from planet import *
+from map import *;
 from ship import *;
 class Display:
 	def __init__(self):
@@ -19,6 +20,7 @@ class Display:
 	def init_event_variables(self):
 		self.planets = py.sprite.Group();
 		self.hero = py.sprite.Group();
+		self.map = py.sprite.Group();
 		self.player = None
 		self.wkup = False;
 		self.wkdo = False;
@@ -36,7 +38,7 @@ class Display:
 		PG = PlanetGenerator()
 		for i in PG.planets:
 			self.planets.add(i)
-			print(i.pos)
+			#print(i.pos)
 		#self.testplanet = Planet((0,0))
 		#self.testgroup = py.sprite.Group();
 		#self.testgroup.add(self.testplanet)
@@ -46,6 +48,10 @@ class Display:
 			break;
 		self.player = Player((i.rect.x,i.rect.y));
 		self.hero.add(self.player)
+	def setmap(self):
+		self.map.add(Map(self.planets));
+
+		
 
 	def sprites_handler(self):
 		pass;
@@ -105,7 +111,7 @@ class Display:
 			r = i.pos - self.player.pos
 			dis = np.linalg.norm(r)
 
-			print(dis)
+			#print(dis)
 			if((dis > 1010 and dis < 1600) and (not self.player.stopgravity) ):
 				#print(dis)
 				g = i.mass/(dis)**2
@@ -156,19 +162,22 @@ class Display:
 		self.planets.update(1,mpt)
 		self.planets.update(2,self.player.pos)
 		self.hero.update();
+		self.map.update(self.player.pos);
 		#self.testgroup.update(mpt)
 
 	def draw(self):
 		#py.draw.circle(self.win,(255,255,255),(int(self.winx/2),int(self.winy/2) ),30,30)
 		self.planets.draw(self.win)
 		self.hero.draw(self.win)
+		self.map.draw(self.win)
 		#self.testgroup.draw(self.win)
 		pass;
-
+	
 	def run(self):
 		self.stopgame=False;
 		self.setplanets()
 		self.sethero();
+		self.setmap();
 		#testing
 		while(not self.stopgame):
 			self.win.fill((0,0,0))
@@ -179,7 +188,6 @@ class Display:
 				break;
 
 			self.draw();
-
 			self.affectgravity()
 			py.display.update();
 

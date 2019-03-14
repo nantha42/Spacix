@@ -1,11 +1,13 @@
 import numpy as np
 import pygame as py 
 G = 5
+
 class Planet(py.sprite.Sprite):
-	def __init__(self,pos):
+	def __init__(self,posx,posy):
 		super().__init__();
-		self.mass = 1000000;
-		self.pos = np.array(pos);
+		self.mass = 9000000;
+		self.pos = np.array([posx,posy]);
+		print("At planet:",self.pos)
 		self.radius = 1000
 		self.color=(0,255,0)
 		self.image = py.Surface((self.radius*2,self.radius*2)) 
@@ -15,7 +17,7 @@ class Planet(py.sprite.Sprite):
 		self.rect.y = self.pos[1]
 
 	def create(self,color):
-		py.draw.circle(self.image,color,(self.radius,self.radius),self.radius,self.radius);
+		py.draw.circle(self.image,color,(self.radius,self.radius),self.radius,4);
 		self.mask = py.mask.from_surface(self.image);
 
 	def update(self,cond,pos):
@@ -42,7 +44,7 @@ class PlanetGenerator:
 			y = np.random.choice(y_list)
 			x_list.remove(x)
 			y_list.remove(y)
-			p = Planet((x*5500,y*5500));
+			p = Planet(x*5500,y*5500);
 			self.planets.append(p)
 		
 

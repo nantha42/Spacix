@@ -12,6 +12,9 @@ class Player(py.sprite.Sprite):
 		self.thr2img = py.image.load(self.thrsrc[1])#for future dev
 		self.landed = False;
 		self.stopgravity = False
+		self.force = np.array([0.0,0.0])
+		self.mass = 100
+		
 		####################
 
 		self.image = None
