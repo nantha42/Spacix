@@ -13,14 +13,14 @@ class Map(py.sprite.Sprite):
 		py.draw.line(self.image,(100,100,100),(10,0),(10,self.size[1]),4)
 		for i in self.planets:
 			p = np.array(i.pos/2750,dtype=int);
-			print(p)
+			#print(p)
 			p += self.offset
 			py.draw.circle(self.image,self.planetcolor,p*10,2,2);
 		self.tempimage = list([self.image])
 		self.rect = self.image.get_rect();
 		self.set_rect();
 	def set_rect(self):
-		self.rect.x = 800-210;
+		self.rect.x = 900-210;
 		self.rect.y = 10;
 
 	def update(self,playerpos):
@@ -31,7 +31,7 @@ class Map(py.sprite.Sprite):
 		self.tempimage=None;
 		for i in self.planets:
 			p = np.array(i.pos/2750,dtype=int);
-			print(p)
+			#print(p)
 			p += self.offset
 			py.draw.circle(self.image,self.planetcolor,p*10,1,1);
 		
