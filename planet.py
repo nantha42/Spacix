@@ -8,7 +8,7 @@ class Planet(py.sprite.Sprite):
 		super(Planet,self).__init__(*groups);
 		self.mass = planetmass
 		self.pos = np.array([posx,posy]);
-		print("At planet:",self.pos)
+		#print("At planet:",self.pos)
 		self.radius = 1000
 		self.color=(0,255,0)
 

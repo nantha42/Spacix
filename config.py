@@ -1,7 +1,9 @@
 dt = 0.1
-rocketexhaustmass = 1
+rocketexhaustmass = 2
 rocketexhaustvelocity = 900
-fuelinmiss = 0.5
+fuelinmiss = 5
 planetmass = 10000000
 ship_angular_rotational_velocity = 4
 playeracceleration = 10
+autosave = True
+loadlatest = True

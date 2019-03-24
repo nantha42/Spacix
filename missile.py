@@ -117,6 +117,6 @@ class Missile(py.sprite.Sprite):
 				self.move = False
 		#print(time.time()-self.time)
 		if (time.time() - self.time) >15:
-			print("TImedout ",self.name)
+			#print("TImedout ",self.name)
 			self.kill()
-		print(np.linalg.norm(self.ships.vel),np.linalg.norm(self.vel))
+		#print(np.linalg.norm(self.ships.vel),np.linalg.norm(self.vel))

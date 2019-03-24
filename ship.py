@@ -1,6 +1,7 @@
 import pygame as py 
 import numpy as np 
 from config import *
+
 class Player(py.sprite.Sprite):
 
 	def __init__(self,pos,*groups):
@@ -8,8 +9,8 @@ class Player(py.sprite.Sprite):
 		self.src = ['img/herohor.png','img/herover1.png']
 		self.thrsrc = ['img/thrust1.png','img/thrust2.png']
 		self.inverted = True;
-		self.thr1img = py.image.load(self.thrsrc[0])#for future dev
-		self.thr2img = py.image.load(self.thrsrc[1])#for future dev
+		self.thr1img = py.image.load(self.thrsrc[0])
+		self.thr2img = py.image.load(self.thrsrc[1])
 		self.landed = False;
 		self.stopgravity = False
 		self.accelerating = False
@@ -17,6 +18,7 @@ class Player(py.sprite.Sprite):
 		self.mass = 100
 		self.autorotate = False
 		self.missilecount = 0
+		self.fuel = 100
 		####################
 
 		self.image = None
@@ -31,6 +33,7 @@ class Player(py.sprite.Sprite):
 		self.vel = np.array([0.0,0.0])
 		self.accel = np.array([0.0,0.0])
 		self.dt = dt;
+		self.groundcheck = False;
 
 	def invert(self):
 		self.inverted = not self.inverted;
@@ -49,6 +52,7 @@ class Player(py.sprite.Sprite):
 		self.accel = playeracceleration*np.array([np.cos(rad),-np.sin(rad)])
 		self.stopgravity = False
 		self.landed = False
+		self.fuel -= 0.1;
 		#print(self.angle,self.accel)
 
 	def decelerate(self):
@@ -97,22 +101,34 @@ class Player(py.sprite.Sprite):
 	def update(self,planets):
 
 		self.mask = py.mask.from_surface(self.image)
-
+		checkcoll = False
 		for i in planets:
-			if py.sprite.collide_mask(self,i):
-				if self.accelerating == False:
+			coll = py.sprite.collide_mask(i,self)
+			print(coll)
+			if coll != None:
+				if self.accelerating == False and self.landed == False:
+					self.landed = True
+					self.groundcheck = True
+					checkcoll = True
+				else:
 					self.landed = True
 				break;
 
 
 		if self.landed == True:
-			self.stopaccelerate()
+			#self.stopaccelerate()
 			self.decelerate()
 			self.stopgravity = True
 			self.landed = False
+
+		if checkcoll == False:
+			self.stopgravity = False
+			self.landed = False
+
 		#print(self.vel)
 		self.vel = self.vel + self.accel * self.dt;
-		self.pos += self.vel*dt;
+		if checkcoll == False:
+			self.pos += self.vel*dt;
 		self.angle += self.angu_vel
 		self.rot_center();
 

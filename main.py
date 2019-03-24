@@ -3,16 +3,25 @@ from planet import *
 from map import *
 from ship import *
 from missile import *
+from save import *
+from Bar import *
 
 class Display:
-	def __init__(self):
-		py.init();
+	def __init__(self,dbcom=""):
+		py.init()
+		self.s = None
+		if dbcom == "create":
+			self.s = Saver("create")
+		else:
+			self.s = Saver()
+
 		self.initdisplayvar()
 		
 		self.win = py.display.set_mode((self.winx,self.winy))
 		self.init_event_variables()
 		self.run()
 		self.spacewalk=np.array([0,0])
+
 
 	def initdisplayvar(self):
 		self.winx = 900
@@ -25,6 +34,7 @@ class Display:
 		self.map = py.sprite.Group( )
 		self.missiles = py.sprite.Group()
 		self.player = None
+		self.fuelbar = None
 		self.wkup = False
 		self.wkdo = False
 		self.wklf = False
@@ -52,12 +62,17 @@ class Display:
 		for i in self.planets:
 			break;
 		self.player = Player((i.rect.x,i.rect.y-i.radius));
+		if loadlatest == True and self.s.dataexist():
+			t =self.s.loadrecent()
+			self.player.pos = np.array([t[1],t[2]])
+			self.player.vel = np.array([t[3],t[4]])
+			self.player.angle = t[5]
+			self.player.accel = np.array([t[6],t[7]])
 		self.hero.add(self.player)
+		self.fuelbar = Bar();
 
 	def setmap(self):
 		self.map.add(Map(self.planets));
-
-		
 
 	def sprites_handler(self):
 		pass;
@@ -127,7 +142,7 @@ class Display:
 			dis = np.linalg.norm(r)
 
 
-			if((dis > 1010 and dis < 2600) and (not self.player.stopgravity)):
+			if((dis > 1000 and dis < 2600) and (not self.player.stopgravity)):
 
 				g = i.mass/(dis)**2
 				g_vec = g*r/dis;
@@ -173,7 +188,7 @@ class Display:
 			self.player.stoprotate();
 
 		if self.launchmissile:
-			print("missile launched")
+			#print("missile launched")
 			self.launchmissile = False
 			self.missiles.add(Missile(self.player,str(self.player.missilecount)))
 
@@ -195,6 +210,7 @@ class Display:
 		self.hero.draw(self.win)
 		self.map.draw(self.win)
 		self.missiles.draw(self.win)
+		self.fuelbar.draw(self.win,self.player.fuel,100)
 		for i in self.planets:
 			x = int(i.pos[0] - (self.player.pos[0]))+500
 			y = int(i.pos[1] - (self.player.pos[1]))+500
@@ -220,8 +236,20 @@ class Display:
 			self.draw();
 			self.affectgravity()
 			py.display.update();
+			if self.stopgame == True:
+				self.s.save(self.player)
+				self.s.commit()
 			#print(np.abs(self.player.angle-90)%360)
 
 if __name__ == '__main__':
-	game = Display()
+	import os;
+	files = os.listdir()
+	if "mydb" in files:
+		game = Display()
+		#print("already")
+	else:
+		#print("creating")
+		game = Display("create")
+
+
 	
