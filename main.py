@@ -1,10 +1,11 @@
-import pygame as py 
+
 from planet import *
 from map import *
 from ship import *
 from missile import *
 from save import *
 from Bar import *
+
 
 class Display:
 	def __init__(self,dbcom=""):
@@ -33,6 +34,7 @@ class Display:
 		self.hero = py.sprite.Group()
 		self.map = py.sprite.Group( )
 		self.missiles = py.sprite.Group()
+		self.satellites = py.sprite.Group()
 		self.player = None
 		self.fuelbar = None
 		self.wkup = False
@@ -52,10 +54,8 @@ class Display:
 		PG = PlanetGenerator()
 		for i in PG.planets:
 			self.planets.append(i)
-			#print(i.pos)
-		#self.testplanet = Planet((0,0))
-		#self.testgroup = py.sprite.Group();
-		#self.testgroup.add(self.testplanet)
+			#sat = i.get_satellite()
+			#self.satellites.add(sat)
 
 	def sethero(self):
 		i=None
@@ -68,11 +68,12 @@ class Display:
 			self.player.vel = np.array([t[3],t[4]])
 			self.player.angle = t[5]
 			self.player.accel = np.array([t[6],t[7]])
+
 		self.hero.add(self.player)
-		self.fuelbar = Bar();
+		self.fuelbar = Bar()
 
 	def setmap(self):
-		self.map.add(Map(self.planets));
+		self.map.add(Map(self.planets))
 
 	def sprites_handler(self):
 		pass;
@@ -94,44 +95,44 @@ class Display:
 				if event.key == py.K_r:
 					self.player.invert()
 				if event.key == py.K_a:
-					self.r_L_player = True;
+					self.r_L_player = True
 				if event.key == py.K_d:
-					self.r_R_player = True;
+					self.r_R_player = True
 				if event.key == py.K_w:
-					self.m_W_player = True;
+					self.m_W_player = True
 					self.player.accelerating = True
 				if event.key == py.K_s:
-					self.m_S_player = True;
+					self.m_S_player = True
 				if event.key == py.K_o:
-					self.setorbital = True;
+					self.setorbital = True
 				if event.key == py.K_SPACE:
-					self.launchmissile = True;
-					self.player.missilecount +=1;
+					self.launchmissile = True
+					self.player.missilecount +=1
 				if event.key == py.K_t:
 					self.player.autorotate = not self.player.autorotate
 
 			if event.type == 3:
 				if event.key == py.K_UP:
-					self.wkup = False;
+					self.wkup = False
 				if event.key == py.K_DOWN:
-					self.wkdo = False;
+					self.wkdo = False
 				if event.key == py.K_LEFT:
-					self.wklf = False;
+					self.wklf = False
 				if event.key == py.K_RIGHT:
-					self.wkrh = False;
+					self.wkrh = False
 				if event.key == py.K_a:
-					self.r_L_player = False;
+					self.r_L_player = False
 				if event.key == py.K_d:
-					self.r_R_player = False;
+					self.r_R_player = False
 				if event.key == py.K_w:
-					self.m_W_player = False;
+					self.m_W_player = False
 					self.player.accelerating = False
 				if event.key == py.K_s:
-					self.m_S_player = False;
+					self.m_S_player = False
 				if event.key == py.K_q:
 					self.stopgame = True
 				if event.key == py.K_o:
-					self.setorbital = False;
+					self.setorbital = False
 
 
 	def affectgravity(self):
@@ -140,16 +141,14 @@ class Display:
 			r = i.pos - self.player.pos
 
 			dis = np.linalg.norm(r)
-
-
-			if((dis > 1000 and dis < 2600) and (not self.player.stopgravity)):
+			if((dis > 900 and dis < 2600) and (not self.player.stopgravity)):
 
 				g = i.mass/(dis)**2
-				g_vec = g*r/dis;
+				g_vec = g*r/dis
 				self.player.vel += g_vec*dt
 				if self.setorbital:
 					self.player.setvelocity(np.sqrt(i.mass/dis))
-					self.setorbital = False;
+					self.setorbital = False
 
 	def respondevents(self):
 		mpt = [0,0]
@@ -177,33 +176,29 @@ class Display:
 			self.player.stopaccelerate()
 			#print("stopping")
 
-
-
 		if self.r_L_player:
 			self.player.rotate(False)
 		elif self.r_R_player:
 			self.player.rotate(True)
 		
 		if not(self.r_L_player or self.r_R_player):
-			self.player.stoprotate();
+			self.player.stoprotate()
 
 		if self.launchmissile:
 			#print("missile launched")
 			self.launchmissile = False
 			self.missiles.add(Missile(self.player,str(self.player.missilecount)))
 
-
-		#(mpt)
-		#self.planets.update(1,mpt)
 		for i in self.planets:
 			i.update(2,self.player.pos)
 		self.hero.update(self.planets)
 		self.map.update(self.player.pos)
 		self.missiles.update(self.planets)
+		self.satellites.update(self.player.pos)
 
 
 	def draw(self):
-		#py.draw.circle(self.win,(255,255,255),(int(self.winx/2),int(self.winy/2) ),30,30)
+
 		for i in self.planets:
 			self.win.blit(i.image,(i.rect.x,i.rect.y))
 		#self.planets.draw(self.win)
@@ -211,18 +206,17 @@ class Display:
 		self.map.draw(self.win)
 		self.missiles.draw(self.win)
 		self.fuelbar.draw(self.win,self.player.fuel,100)
-		for i in self.planets:
-			x = int(i.pos[0] - (self.player.pos[0]))+500
-			y = int(i.pos[1] - (self.player.pos[1]))+500
-			#py.draw.circle(self.win,(255,255,255),(x,y),1000,4)
-		#self.testgroup.draw(self.win)
-		pass;
-	
+		#self.satellites.draw(self.win)
+		#for i in self.satellites:
+		#	i.draw(self.win)
+
+
+
 	def run(self):
-		self.stopgame=False;
+		self.stopgame=False
 		self.setplanets()
-		self.sethero();
-		self.setmap();
+		self.sethero()
+		self.setmap()
 
 		#testing
 		while(not self.stopgame):
@@ -231,18 +225,17 @@ class Display:
 			self.respondevents()
 			for i in self.planets:
 				#print(np.array(self.player.pos),np.array([i.rect.x,i.rect.y]))
-				break;
-
-			self.draw();
+				break
+			self.draw()
 			self.affectgravity()
-			py.display.update();
+			py.display.update()
 			if self.stopgame == True:
 				self.s.save(self.player)
 				self.s.commit()
 			#print(np.abs(self.player.angle-90)%360)
 
 if __name__ == '__main__':
-	import os;
+	import os
 	files = os.listdir()
 	if "mydb" in files:
 		game = Display()
@@ -250,6 +243,3 @@ if __name__ == '__main__':
 	else:
 		#print("creating")
 		game = Display("create")
-
-
-	

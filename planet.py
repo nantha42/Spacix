@@ -1,6 +1,7 @@
 import numpy as np
 import pygame as py
 from config import *
+import satellite
 G = 5
 
 class Planet(py.sprite.Sprite):
@@ -31,10 +32,11 @@ class Planet(py.sprite.Sprite):
 		elif cond == 2:
 			self.rect.x = self.pos[0]-(pos[0]) - 1000*np.sin(np.pi/4) + 250
 			self.rect.y = self.pos[1]-(pos[1]) - 1000*np.sin(np.pi/4) + 250
-			#self.rect.x = self.pos[0]-(pos[0]) - 1000
-			#self.rect.y = self.pos[1] -(pos[1]) - 1000
 
-
+	def get_satellite(self):
+		s = satellite.Satellite()
+		s.setvelocity(self)
+		return s
 class PlanetGenerator:
 	def __init__(self):
 		self.nplanets = 10
@@ -43,8 +45,6 @@ class PlanetGenerator:
 		x_list=[x-5 for x in range(10)]
 		y_list=[y-5 for y in range(10)]
 
-		
-		
 		for i in range(self.nplanets):
 			x = np.random.choice(x_list)
 			y = np.random.choice(y_list)
@@ -52,8 +52,6 @@ class PlanetGenerator:
 			y_list.remove(y)
 			p = Planet(x*5500,y*5500);
 			self.planets.append(p)
-
-		
 
 if __name__ == '__main__':
 	PG = PlanetGenerator();

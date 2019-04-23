@@ -7,6 +7,7 @@ class Missile(py.sprite.Sprite):
 	def __init__(self, ship,name):
 		super().__init__()
 		self.permimage = py.image.load("img/pmiss2.png")
+		self.permimage = py.transform.scale(self.permimage, (6, 6));
 		self.image = None
 		self.rect = None
 		self.ships = ship
@@ -28,6 +29,7 @@ class Missile(py.sprite.Sprite):
 		self.fuelmass = fuelinmiss
 		self.prevunit = np.array([np.cos(np.deg2rad(ship.angle))+90,np.sin(np.deg2rad(ship.angle))+90])
 		self.time = time.time();
+
 	def rot_center(self,x=None):
 		angle = x
 		if x == None:
@@ -56,11 +58,6 @@ class Missile(py.sprite.Sprite):
 		else:
 			self.accel = np.linalg.norm([0.0,0.0])
 
-		#	print("Missile",self.name," ","Fuel Emptied")
-		#print("Missile", self.name, " ", force / self.fuelmass, "Force:", force, "Accel", np.linalg.norm(self.accel),
-		#	  "Velocity", np.linalg.norm(self.vel))
-		G = None
-		#Code for collision detection
 		for i in planets:
 			if py.sprite.collide_mask(self,i):
 				self.move = False
@@ -97,26 +94,20 @@ class Missile(py.sprite.Sprite):
 		#	self.rot_center(ca+90)"""
 		"""if v[0]>0 and v[1]>0 :
 			self.rot_center(ca+270)"""
+
 		#######################################
 		self.vel += np.array(self.accel*dt,dtype=int)
 		self.pos += self.vel*dt
 
-		self.rect.x = 520
-		self.rect.y = 520 - 10 * np.sin(np.deg2rad(self.angle))
-		#self.angle = np.rad2deg(np.arccos(self.vel[0]))+90
 		self.rect.x = self.pos[0] -(self.ships.pos[0]) + 520
 		self.rect.y = self.pos[1] - (self.ships.pos[1]) + 520
-		#print(self.pos,self.vel)
-
-		#print(np.rad2deg(np.arccos(unit[0])) + 90,np.rad2deg(np.arcsin(unit[1])) + 90)
-
-		#self.angle = np.rad2deg(np.arccos(unit[0])) + 90
 
 		for i in planets:
 			if py.sprite.collide_mask(self, i):
+				print(self.rect.x,self.rect.y,i.rect.x,i.rect.y)
 				self.move = False
 		#print(time.time()-self.time)
-		if (time.time() - self.time) >15:
+		if (time.time() - self.time) >missiledisappeartime:
 			#print("TImedout ",self.name)
 			self.kill()
 		#print(np.linalg.norm(self.ships.vel),np.linalg.norm(self.vel))

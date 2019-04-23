@@ -2,16 +2,18 @@ import pygame as py
 import numpy as np 
 from config import *
 
+import copy
+
 class Player(py.sprite.Sprite):
 
 	def __init__(self,pos,*groups):
 		super(Player,self).__init__(*groups)
 		self.src = ['img/herohor.png','img/herover1.png']
 		self.thrsrc = ['img/thrust1.png','img/thrust2.png']
-		self.inverted = True;
+		self.inverted = True
 		self.thr1img = py.image.load(self.thrsrc[0])
 		self.thr2img = py.image.load(self.thrsrc[1])
-		self.landed = False;
+		self.landed = False
 		self.stopgravity = False
 		self.accelerating = False
 		self.force = np.array([0.0,0.0])
@@ -23,31 +25,32 @@ class Player(py.sprite.Sprite):
 
 		self.image = None
 		self.rect = None
-		self.invert();
+		self.invert()
 		#####################
 
 		self.angle = 0
 		self.pos = np.array(pos,dtype='float64')
 		#self.pos[1] -= 2100
-		self.angu_vel = 0;
+		self.angu_vel = 0
 		self.vel = np.array([0.0,0.0])
 		self.accel = np.array([0.0,0.0])
-		self.dt = dt;
-		self.groundcheck = False;
+		self.dt = dt
+		self.groundcheck = False
+
 
 	def invert(self):
-		self.inverted = not self.inverted;
+		self.inverted = not self.inverted
 		if self.inverted:
 			self.permimage = py.image.load(self.src[1])
 		else: 
 			self.permimage = py.image.load(self.src[0])
+		self.permimage = py.transform.scale(self.permimage,(30,30));
 		self.rect = self.permimage.get_rect()
-		self.image = self.permimage;
+		self.image = self.permimage
 	
 	def accelerate(self):
 		#print("accelerating")
 		self.landed = False
-
 		rad = (self.angle+90)*np.pi/180
 		self.accel = playeracceleration*np.array([np.cos(rad),-np.sin(rad)])
 		self.stopgravity = False
@@ -98,13 +101,13 @@ class Player(py.sprite.Sprite):
 	def returnrotcenter(self):
 		orig_rect = self.permimage.get_rect()
 
-	def update(self,planets):
 
+	def update(self,planets):
 		self.mask = py.mask.from_surface(self.image)
 		checkcoll = False
 		for i in planets:
 			coll = py.sprite.collide_mask(i,self)
-			print(coll)
+
 			if coll != None:
 				if self.accelerating == False and self.landed == False:
 					self.landed = True
@@ -112,8 +115,8 @@ class Player(py.sprite.Sprite):
 					checkcoll = True
 				else:
 					self.landed = True
-				break;
-
+					pass
+				break
 
 		if self.landed == True:
 			#self.stopaccelerate()
@@ -126,9 +129,8 @@ class Player(py.sprite.Sprite):
 			self.landed = False
 
 		#print(self.vel)
-		self.vel = self.vel + self.accel * self.dt;
+		self.vel = self.vel + self.accel * self.dt
 		if checkcoll == False:
-			self.pos += self.vel*dt;
+			self.pos += self.vel*dt
 		self.angle += self.angu_vel
-		self.rot_center();
-
+		self.rot_center()
