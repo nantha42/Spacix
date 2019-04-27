@@ -12,7 +12,7 @@ class Satellite(py.sprite.Sprite):
 
     def setvelocity(self,planet):
         self.pos[1] = planet.pos[1]
-        print("1",self.pos[1])
+
         self.pos[0] = planet.pos[0]+1200
 
         self.belongedplanet = planet
@@ -26,7 +26,6 @@ class Satellite(py.sprite.Sprite):
             vy = -unit[0]/unit[1]
             unit1 = np.array([unit[0], vy])
         else:
-            print("Here",unit)
             unit1 =  np.array([0,1])
 
         self.vel = unit1*mag
@@ -38,7 +37,6 @@ class Satellite(py.sprite.Sprite):
         g_vec = g*r/dis
         self.vel += g_vec*dt
         self.pos += self.vel*dt
-        print(dis)
         self.rect.x = int(r[0]+self.belongedplanet.rect.x+(2000*np.sin(np.pi/4)))
         self.rect.y = int(r[1] + self.belongedplanet.rect.y + (2000 * np.sin(np.pi / 4)))
 

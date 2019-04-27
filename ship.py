@@ -21,24 +21,25 @@ class Player(py.sprite.Sprite):
 		self.autorotate = False
 		self.missilecount = 0
 		self.fuel = 100
+		self.requireorbitalvel = 0
 		####################
 
+		self.angle = 0
+		self.pos = np.array(pos, dtype='float64')
+		# self.pos[1] -= 2100
+		self.angu_vel = 0
+		self.vel = np.array([0.0, 0.0])
+		self.accel = np.array([0.0, 0.0])
+		self.dt = dt
+		self.groundcheck = False
+		#####################
 		self.image = None
 		self.rect = None
 		self.invert()
-		#####################
-
-		self.angle = 0
-		self.pos = np.array(pos,dtype='float64')
-		#self.pos[1] -= 2100
-		self.angu_vel = 0
-		self.vel = np.array([0.0,0.0])
-		self.accel = np.array([0.0,0.0])
-		self.dt = dt
-		self.groundcheck = False
 
 
 	def invert(self):
+
 		self.inverted = not self.inverted
 		if self.inverted:
 			self.permimage = py.image.load(self.src[1])
@@ -47,6 +48,9 @@ class Player(py.sprite.Sprite):
 		self.permimage = py.transform.scale(self.permimage,(30,30));
 		self.rect = self.permimage.get_rect()
 		self.image = self.permimage
+		self.rot_center()
+
+
 	
 	def accelerate(self):
 		#print("accelerating")
@@ -101,7 +105,6 @@ class Player(py.sprite.Sprite):
 	def returnrotcenter(self):
 		orig_rect = self.permimage.get_rect()
 
-
 	def update(self,planets):
 		self.mask = py.mask.from_surface(self.image)
 		checkcoll = False
@@ -134,3 +137,4 @@ class Player(py.sprite.Sprite):
 			self.pos += self.vel*dt
 		self.angle += self.angu_vel
 		self.rot_center()
+		#print("Two    "+str(self.vel))

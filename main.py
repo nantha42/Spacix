@@ -5,7 +5,7 @@ from ship import *
 from missile import *
 from save import *
 from Bar import *
-
+from text import *
 
 class Display:
 	def __init__(self,dbcom=""):
@@ -19,10 +19,10 @@ class Display:
 		self.initdisplayvar()
 		
 		self.win = py.display.set_mode((self.winx,self.winy))
+		self.writer = Text(self.win)
 		self.init_event_variables()
 		self.run()
 		self.spacewalk=np.array([0,0])
-
 
 	def initdisplayvar(self):
 		self.winx = 900
@@ -139,15 +139,15 @@ class Display:
 		nonthingtrue = True
 		for i in self.planets:
 			r = i.pos - self.player.pos
-
 			dis = np.linalg.norm(r)
 			if((dis > 900 and dis < 2600) and (not self.player.stopgravity)):
-
 				g = i.mass/(dis)**2
 				g_vec = g*r/dis
 				self.player.vel += g_vec*dt
+				orb_vel = np.sqrt(i.mass / dis)
+				self.player.requireorbitalvel = orb_vel
 				if self.setorbital:
-					self.player.setvelocity(np.sqrt(i.mass/dis))
+					self.player.setvelocity(orb_vel)
 					self.setorbital = False
 
 	def respondevents(self):
@@ -196,21 +196,22 @@ class Display:
 		self.missiles.update(self.planets)
 		self.satellites.update(self.player.pos)
 
+	def writeparameters(self):
+		velocitystr = "Velocity:  " + str(int(np.linalg.norm(self.player.vel)))
+		vestrlencen = len(velocitystr)/2
+		orbitalstr  = "Req orbital: "+str(int(self.player.requireorbitalvel))
+		orbitalstrlen = len(orbitalstr)/2
+		self.writer.draw((vestrlencen*7, 100), velocitystr)
+		self.writer.draw((orbitalstrlen*7,120),orbitalstr)
 
 	def draw(self):
-
 		for i in self.planets:
 			self.win.blit(i.image,(i.rect.x,i.rect.y))
-		#self.planets.draw(self.win)
 		self.hero.draw(self.win)
 		self.map.draw(self.win)
 		self.missiles.draw(self.win)
 		self.fuelbar.draw(self.win,self.player.fuel,100)
-		#self.satellites.draw(self.win)
-		#for i in self.satellites:
-		#	i.draw(self.win)
-
-
+		self.writeparameters()
 
 	def run(self):
 		self.stopgame=False
