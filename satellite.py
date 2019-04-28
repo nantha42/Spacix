@@ -12,9 +12,7 @@ class Satellite(py.sprite.Sprite):
 
     def setvelocity(self,planet):
         self.pos[1] = planet.pos[1]
-
         self.pos[0] = planet.pos[0]+1200
-
         self.belongedplanet = planet
         r = planet.pos-self.pos
         dis = np.linalg.norm(r)
@@ -27,7 +25,6 @@ class Satellite(py.sprite.Sprite):
             unit1 = np.array([unit[0], vy])
         else:
             unit1 =  np.array([0,1])
-
         self.vel = unit1*mag
 
     def update(self,pos):

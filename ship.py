@@ -70,7 +70,6 @@ class Player(py.sprite.Sprite):
 	def stopaccelerate(self):
 		self.accel = np.array([0.0,0.0])
 
-
 	def rotate(self,clockwise=True):
 		if self.inverted:
 			if clockwise:

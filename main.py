@@ -6,7 +6,7 @@ from missile import *
 from save import *
 from Bar import *
 from text import *
-
+from trail import *
 class Display:
 	def __init__(self,dbcom=""):
 		py.init()
@@ -35,12 +35,14 @@ class Display:
 		self.map = py.sprite.Group( )
 		self.missiles = py.sprite.Group()
 		self.satellites = py.sprite.Group()
+		self.trail = Trail()
 		self.player = None
 		self.fuelbar = None
 		self.wkup = False
 		self.wkdo = False
 		self.wklf = False
 		self.wkrh = False
+		self.autotrail = False
 		self.m_W_player = False
 		self.m_S_player = False
 		self.r_L_player = False
@@ -110,6 +112,12 @@ class Display:
 					self.player.missilecount +=1
 				if event.key == py.K_t:
 					self.player.autorotate = not self.player.autorotate
+				if event.key == py.K_j:
+					self.trail.addpoint(self.player.pos)
+				if event.key == py.K_c:
+					self.trail.clear()
+				if event.key == py.K_k:
+					self.autotrail = not self.autotrail
 
 			if event.type == 3:
 				if event.key == py.K_UP:
@@ -212,6 +220,9 @@ class Display:
 		self.missiles.draw(self.win)
 		self.fuelbar.draw(self.win,self.player.fuel,100)
 		self.writeparameters()
+		self.trail.draw(self.win,self.player.pos)
+		if self.autotrail:
+			self.trail.autotrail(self.player)
 
 	def run(self):
 		self.stopgame=False
@@ -229,6 +240,7 @@ class Display:
 				break
 			self.draw()
 			self.affectgravity()
+			self.trail.maintainlength()
 			py.display.update()
 			if self.stopgame == True:
 				self.s.save(self.player)

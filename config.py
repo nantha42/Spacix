@@ -8,3 +8,4 @@ playeracceleration = 12
 autosave = True
 loadlatest = True
 missiledisappeartime = 30
+trailmaxlength = 100
