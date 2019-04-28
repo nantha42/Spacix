@@ -4,6 +4,7 @@ rocketexhaustvelocity = 800
 fuelinmiss = 20
 planetmass = 10000000
 ship_angular_rotational_velocity = 4
+ship_angular_acceleration = 0.1
 playeracceleration = 12
 autosave = True
 loadlatest = True

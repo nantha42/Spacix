@@ -9,10 +9,10 @@ class Player(py.sprite.Sprite):
 	def __init__(self,pos,*groups):
 		super(Player,self).__init__(*groups)
 		self.src = ['img/herohor.png','img/herover1.png']
-		self.thrsrc = ['img/thrust1.png','img/thrust2.png']
+		self.thrsrc = [['img/thrust1inv.png','img/thrust2inv.png'],['img/thrust1.png','img/thrust2.png']]
 		self.inverted = True
-		self.thr1img = py.image.load(self.thrsrc[0])
-		self.thr2img = py.image.load(self.thrsrc[1])
+		self.thr1img = py.image.load(self.thrsrc[1][0])
+		self.thr2img = py.image.load(self.thrsrc[1][1])
 		self.landed = False
 		self.stopgravity = False
 		self.accelerating = False
@@ -20,12 +20,13 @@ class Player(py.sprite.Sprite):
 		self.mass = 100
 		self.autorotate = False
 		self.missilecount = 0
-		self.fuel = 100
+		self.fuel = 200
 		self.requireorbitalvel = 0
 		####################
 
 		self.angle = 0
 		self.pos = np.array(pos, dtype='float64')
+		print(self.pos)
 		# self.pos[1] -= 2100
 		self.angu_vel = 0
 		self.vel = np.array([0.0, 0.0])
@@ -50,17 +51,37 @@ class Player(py.sprite.Sprite):
 		self.image = self.permimage
 		self.rot_center()
 
-
+	def nonfireimage(self):
+		if self.inverted:
+			self.permimage = py.image.load(self.src[1])
+		else:
+			self.permimage = py.image.load(self.src[0])
+		self.permimage = py.transform.scale(self.permimage,(30,30));
+		self.rect = self.permimage.get_rect()
+		self.image = self.permimage
+		self.rot_center()
 	
 	def accelerate(self):
 		#print("accelerating")
-		self.landed = False
-		rad = (self.angle+90)*np.pi/180
-		self.accel = playeracceleration*np.array([np.cos(rad),-np.sin(rad)])
-		self.stopgravity = False
-		self.landed = False
-		self.fuel -= 0.1;
-		#print(self.angle,self.accel)
+
+		if self.fuel > 0.0:
+			self.landed = False
+			rad = (self.angle+90)*np.pi/180
+			self.accel = playeracceleration*np.array([np.cos(rad),-np.sin(rad)])
+			self.stopgravity = False
+			self.landed = False
+			self.fuel -= 0.1;
+			#print(self.angle,self.accel)
+
+			if self.inverted:
+				self.permimage = py.image.load(self.thrsrc[1][np.random.randint(0,2)])
+			else:
+				self.permimage = py.image.load(self.thrsrc[0][np.random.randint(0,2)])
+			self.permimage = py.transform.scale(self.permimage, (30, 30));
+			self.rect = self.permimage.get_rect()
+			self.image = self.permimage
+			self.rot_center()
+
 
 	def decelerate(self):
 		self.accelerating = False
@@ -73,14 +94,14 @@ class Player(py.sprite.Sprite):
 	def rotate(self,clockwise=True):
 		if self.inverted:
 			if clockwise:
-				self.angu_vel = -ship_angular_rotational_velocity
+				self.angu_vel -= ship_angular_acceleration
 			else:
-				self.angu_vel = ship_angular_rotational_velocity
+				self.angu_vel += ship_angular_acceleration
 		else:
 			if clockwise:
-				self.angu_vel = -ship_angular_rotational_velocity
+				self.angu_vel -= ship_angular_acceleration
 			else:
-				self.angu_vel = ship_angular_rotational_velocity
+				self.angu_vel += ship_angular_acceleration
 
 	def setvelocity(self,v):
 		rad = (self.angle+90)*np.pi/180
@@ -117,6 +138,7 @@ class Player(py.sprite.Sprite):
 					checkcoll = True
 				else:
 					self.landed = True
+					self.angu_vel = 0
 					pass
 				break
 

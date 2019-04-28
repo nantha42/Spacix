@@ -7,6 +7,7 @@ from save import *
 from Bar import *
 from text import *
 from trail import *
+from sound import *
 class Display:
 	def __init__(self,dbcom=""):
 		py.init()
@@ -19,10 +20,12 @@ class Display:
 		self.initdisplayvar()
 		
 		self.win = py.display.set_mode((self.winx,self.winy))
+		self.sound = Sound()
 		self.writer = Text(self.win)
 		self.init_event_variables()
 		self.run()
 		self.spacewalk=np.array([0,0])
+
 
 	def initdisplayvar(self):
 		self.winx = 900
@@ -49,7 +52,7 @@ class Display:
 		self.r_R_player = False
 		self.setorbital = False
 		self.launchmissile = False
-		pass;
+		pass
 
 	def setplanets(self):
 		#initates the game settings and the sprites positions
@@ -63,7 +66,7 @@ class Display:
 		i=None
 		for i in self.planets:
 			break;
-		self.player = Player((i.rect.x,i.rect.y-i.radius));
+		self.player = Player((i.rect.x,i.rect.y-i.radius))
 		if loadlatest == True and self.s.dataexist():
 			t =self.s.loadrecent()
 			self.player.pos = np.array([t[1],t[2]])
@@ -94,7 +97,7 @@ class Display:
 					self.wklf = True
 				if event.key == py.K_RIGHT:
 					self.wkrh = True
-				if event.key == py.K_r:
+				if event.key == py.K_i:
 					self.player.invert()
 				if event.key == py.K_a:
 					self.r_L_player = True
@@ -103,6 +106,7 @@ class Display:
 				if event.key == py.K_w:
 					self.m_W_player = True
 					self.player.accelerating = True
+					self.sound.thrusts()
 				if event.key == py.K_s:
 					self.m_S_player = True
 				if event.key == py.K_o:
@@ -118,6 +122,11 @@ class Display:
 					self.trail.clear()
 				if event.key == py.K_k:
 					self.autotrail = not self.autotrail
+				if event.key == py.K_r:
+					self.player.pos = np.array([0,-23000],float)
+					self.player.angu_vel = 0
+					self.player.vel = np.array([0.0,0.0])
+					self.player.angle = 0
 
 			if event.type == 3:
 				if event.key == py.K_UP:
@@ -135,6 +144,7 @@ class Display:
 				if event.key == py.K_w:
 					self.m_W_player = False
 					self.player.accelerating = False
+					self.sound.stopthrusts()
 				if event.key == py.K_s:
 					self.m_S_player = False
 				if event.key == py.K_q:
@@ -181,6 +191,7 @@ class Display:
 				self.player.decelerate()
 		else:
 			self.player.accelerating = False
+			self.player.nonfireimage()
 			self.player.stopaccelerate()
 			#print("stopping")
 
@@ -189,8 +200,8 @@ class Display:
 		elif self.r_R_player:
 			self.player.rotate(True)
 		
-		if not(self.r_L_player or self.r_R_player):
-			self.player.stoprotate()
+		#if not(self.r_L_player or self.r_R_player):
+		#	self.player.stoprotate()
 
 		if self.launchmissile:
 			#print("missile launched")
@@ -209,8 +220,11 @@ class Display:
 		vestrlencen = len(velocitystr)/2
 		orbitalstr  = "Req orbital: "+str(int(self.player.requireorbitalvel))
 		orbitalstrlen = len(orbitalstr)/2
+		angvelstr = "Angular Velocity:" + str("{0:.2f}".format(self.player.angu_vel))
+		angvelstrlen = len(angvelstr)/2
 		self.writer.draw((vestrlencen*7, 100), velocitystr)
 		self.writer.draw((orbitalstrlen*7,120),orbitalstr)
+		self.writer.draw((angvelstrlen*7,80),angvelstr)
 
 	def draw(self):
 		for i in self.planets:
@@ -229,7 +243,7 @@ class Display:
 		self.setplanets()
 		self.sethero()
 		self.setmap()
-
+		self.sound.theme()
 		#testing
 		while(not self.stopgame):
 			self.win.fill((0,30,40))
@@ -245,6 +259,9 @@ class Display:
 			if self.stopgame == True:
 				self.s.save(self.player)
 				self.s.commit()
+			elif self.player.fuel < 0.1:
+				self.stopgame = True
+
 			#print(np.abs(self.player.angle-90)%360)
 
 if __name__ == '__main__':
