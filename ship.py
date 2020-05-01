@@ -26,8 +26,11 @@ class Player(py.sprite.Sprite):
 
 		self.angle = 0
 		self.pos = np.array(pos, dtype='float64')
-		print(self.pos)
+		self.rectheight = 30
+		self.rectwidth = 30
 		# self.pos[1] -= 2100
+		self.zoom = 1
+		self.old_zoom = 1
 		self.angu_vel = 0
 		self.vel = np.array([0.0, 0.0])
 		self.accel = np.array([0.0, 0.0])
@@ -38,7 +41,6 @@ class Player(py.sprite.Sprite):
 		self.rect = None
 		self.invert()
 
-
 	def invert(self):
 
 		self.inverted = not self.inverted
@@ -46,7 +48,8 @@ class Player(py.sprite.Sprite):
 			self.permimage = py.image.load(self.src[1])
 		else: 
 			self.permimage = py.image.load(self.src[0])
-		self.permimage = py.transform.scale(self.permimage,(30,30));
+		self.permimage = py.transform.scale(self.permimage,(int(self.rectwidth*self.zoom),int(self.rectheight*self.zoom)))
+		self.permrect = self.permimage.get_rect()
 		self.rect = self.permimage.get_rect()
 		self.image = self.permimage
 		self.rot_center()
@@ -56,7 +59,7 @@ class Player(py.sprite.Sprite):
 			self.permimage = py.image.load(self.src[1])
 		else:
 			self.permimage = py.image.load(self.src[0])
-		self.permimage = py.transform.scale(self.permimage,(30,30));
+		self.permimage = py.transform.scale(self.permimage,(int(self.rectwidth*self.zoom),int(self.rectheight*self.zoom)))
 		self.rect = self.permimage.get_rect()
 		self.image = self.permimage
 		self.rot_center()
@@ -77,7 +80,7 @@ class Player(py.sprite.Sprite):
 				self.permimage = py.image.load(self.thrsrc[1][np.random.randint(0,2)])
 			else:
 				self.permimage = py.image.load(self.thrsrc[0][np.random.randint(0,2)])
-			self.permimage = py.transform.scale(self.permimage, (30, 30));
+			self.permimage = py.transform.scale(self.permimage,(int(self.rectwidth*self.zoom),int(self.rectheight*self.zoom)))
 			self.rect = self.permimage.get_rect()
 			self.image = self.permimage
 			self.rot_center()
@@ -93,15 +96,11 @@ class Player(py.sprite.Sprite):
 
 	def rotate(self,clockwise=True):
 		if self.inverted:
-			if clockwise:
-				self.angu_vel -= ship_angular_acceleration
-			else:
-				self.angu_vel += ship_angular_acceleration
+			if clockwise:self.angu_vel -= ship_angular_acceleration
+			else:self.angu_vel += ship_angular_acceleration
 		else:
-			if clockwise:
-				self.angu_vel -= ship_angular_acceleration
-			else:
-				self.angu_vel += ship_angular_acceleration
+			if clockwise:self.angu_vel -= ship_angular_acceleration
+			else:self.angu_vel += ship_angular_acceleration
 
 	def setvelocity(self,v):
 		rad = (self.angle+90)*np.pi/180
@@ -117,20 +116,26 @@ class Player(py.sprite.Sprite):
 		rot_rect = orig_rect.copy()
 		rot_rect.center = rot_image.get_rect().center
 		rot_image = rot_image.subsurface(rot_rect).copy()
-		self.image = rot_image
-		self.rect = self.image.get_rect()
-		self.rect.x = 500
-		self.rect.y = 500
+		if self.zoom != self.old_zoom:
+			self.image = py.transform.scale(rot_image,(int(self.rect.width*self.zoom),int(self.rect.height*self.zoom)))
+			self.rect = self.image.get_rect()
+			self.old_zoom = self.zoom
+			print("Palyer zoom",self.zoom)
+		else:
+			self.image = rot_image
+			self.rect = self.image.get_rect()
+		self.rect.centerx = 500
+		self.rect.centery = 500
 
 	def returnrotcenter(self):
 		orig_rect = self.permimage.get_rect()
 
 	def update(self,planets):
 		self.mask = py.mask.from_surface(self.image)
+
 		checkcoll = False
 		for i in planets:
 			coll = py.sprite.collide_mask(i,self)
-
 			if coll != None:
 				if self.accelerating == False and self.landed == False:
 					self.landed = True
@@ -143,7 +148,6 @@ class Player(py.sprite.Sprite):
 				break
 
 		if self.landed == True:
-			#self.stopaccelerate()
 			self.decelerate()
 			self.stopgravity = True
 			self.landed = False

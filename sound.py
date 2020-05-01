@@ -9,16 +9,16 @@ class Sound:
         self.offthrust = py.mixer.Sound(self.songs[2])
     def theme(self):
         music = py.mixer.Sound(self.songs[0])
-        music.set_volume(0.1)
+        music.set_volume(0)
         music.play(-1)
 
     def thrusts(self):
         self.offthrust.stop()
-        self.thrust.set_volume(0.3)
+        self.thrust.set_volume(0.0)
         self.thrust.play(-1)
 
     def stopthrusts(self):
-        self.offthrust.set_volume(0.2)
+        self.offthrust.set_volume(0.0)
         self.offthrust.play()
         self.thrust.stop()
 

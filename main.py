@@ -8,6 +8,9 @@ from Bar import *
 from text import *
 from trail import *
 from sound import *
+from explosion import *
+import config
+
 class Display:
 	def __init__(self,dbcom=""):
 		py.init()
@@ -16,9 +19,7 @@ class Display:
 			self.s = Saver("create")
 		else:
 			self.s = Saver()
-
 		self.initdisplayvar()
-		
 		self.win = py.display.set_mode((self.winx,self.winy))
 		self.sound = Sound()
 		self.writer = Text(self.win)
@@ -38,6 +39,7 @@ class Display:
 		self.map = py.sprite.Group( )
 		self.missiles = py.sprite.Group()
 		self.satellites = py.sprite.Group()
+		self.explosions = py.sprite.Group()
 		self.trail = Trail()
 		self.player = None
 		self.fuelbar = None
@@ -45,6 +47,8 @@ class Display:
 		self.wkdo = False
 		self.wklf = False
 		self.wkrh = False
+		self.zoomin = False
+		self.zoomout = False
 		self.autotrail = False
 		self.m_W_player = False
 		self.m_S_player = False
@@ -81,8 +85,7 @@ class Display:
 		self.map.add(Map(self.planets))
 
 	def sprites_handler(self):
-		pass;
-
+		pass
 
 	def eventhandler(self):
 		for event in py.event.get():
@@ -90,9 +93,9 @@ class Display:
 				self.stopgame = True
 			if event.type == 2:
 				if event.key == py.K_UP:
-					self.wkup = True
+					self.zoomin = True
 				if event.key == py.K_DOWN:
-					self.wkdo = True
+					self.zoomout = True
 				if event.key == py.K_LEFT:
 					self.wklf = True
 				if event.key == py.K_RIGHT:
@@ -109,6 +112,7 @@ class Display:
 					self.sound.thrusts()
 				if event.key == py.K_s:
 					self.m_S_player = True
+
 				if event.key == py.K_o:
 					self.setorbital = True
 				if event.key == py.K_SPACE:
@@ -123,16 +127,17 @@ class Display:
 				if event.key == py.K_k:
 					self.autotrail = not self.autotrail
 				if event.key == py.K_r:
-					self.player.pos = np.array([0,-23000],float)
+					self.player.pos = np.array([0,-22300-size/2],float)
 					self.player.angu_vel = 0
 					self.player.vel = np.array([0.0,0.0])
 					self.player.angle = 0
+					self.sound.offthrust.stop()
 
 			if event.type == 3:
 				if event.key == py.K_UP:
-					self.wkup = False
+					self.zoomin = False
 				if event.key == py.K_DOWN:
-					self.wkdo = False
+					self.zoomout = False
 				if event.key == py.K_LEFT:
 					self.wklf = False
 				if event.key == py.K_RIGHT:
@@ -155,18 +160,33 @@ class Display:
 
 	def affectgravity(self):
 		nonthingtrue = True
+		count = 0
+		min = 100000000000
+		minindex = 0
 		for i in self.planets:
 			r = i.pos - self.player.pos
 			dis = np.linalg.norm(r)
-			if((dis > 900 and dis < 2600) and (not self.player.stopgravity)):
+			if(dis<min):
+				min = dis
+				minindex = count
+			count+=1
+
+		nearplanet = self.planets[minindex]
+		r = nearplanet.pos - self.player.pos
+		dis = np.linalg.norm(r)
+		orb_vel = np.sqrt(nearplanet.mass / dis)
+		self.player.requireorbitalvel = orb_vel
+		if self.setorbital:
+			self.player.setvelocity(orb_vel)
+			self.setorbital = False
+
+		for i in self.planets:
+			r = i.pos - self.player.pos
+			dis = np.linalg.norm(r)
+			if((dis > 1 and dis < i.radius+3000) and (not self.player.stopgravity)):
 				g = i.mass/(dis)**2
 				g_vec = g*r/dis
 				self.player.vel += g_vec*dt
-				orb_vel = np.sqrt(i.mass / dis)
-				self.player.requireorbitalvel = orb_vel
-				if self.setorbital:
-					self.player.setvelocity(orb_vel)
-					self.setorbital = False
 
 	def respondevents(self):
 		mpt = [0,0]
@@ -199,14 +219,11 @@ class Display:
 			self.player.rotate(False)
 		elif self.r_R_player:
 			self.player.rotate(True)
-		
-		#if not(self.r_L_player or self.r_R_player):
-		#	self.player.stoprotate()
 
 		if self.launchmissile:
 			#print("missile launched")
 			self.launchmissile = False
-			self.missiles.add(Missile(self.player,str(self.player.missilecount)))
+			self.missiles.add(Missile(self.player,str(self.player.missilecount),self.player.zoom))
 
 		for i in self.planets:
 			i.update(2,self.player.pos)
@@ -214,6 +231,12 @@ class Display:
 		self.map.update(self.player.pos)
 		self.missiles.update(self.planets)
 		self.satellites.update(self.player.pos)
+
+		for missile in self.missiles:
+			if missile.killme:
+				self.explosions.add(Explosion(missile.pos))
+				missile.kill()
+		self.explosions.update(self.player)
 
 	def writeparameters(self):
 		velocitystr = "Velocity:  " + str(int(np.linalg.norm(self.player.vel)))
@@ -227,14 +250,42 @@ class Display:
 		self.writer.draw((angvelstrlen*7,80),angvelstr)
 
 	def draw(self):
+		if self.zoomin :
+			config.zoom_value+=0.2
+
+		elif self.zoomout:
+			if config.zoom_value > 1:
+				config.zoom_value -= 0.2
+
+		if self.zoomin or self.zoomout:
+			#planets zoom
+			self.trail.zoom = config.zoom_value
+			for i in self.planets:
+				i.zoom = config.zoom_value
+			#ship zoom
+			self.player.zoom = config.zoom_value
+			#missile zoom
+			for i in self.missiles:
+				i.zoom = config.zoom_value
+
+			print(config.zoom_value)
+			for i in self.planets:
+				for j in i.clouds:
+					j.zoom = config.zoom_value
 		for i in self.planets:
+			self.win.blit(i.atmos_image,(i.atmos_rect.x,i.atmos_rect.	y))
 			self.win.blit(i.image,(i.rect.x,i.rect.y))
 		self.hero.draw(self.win)
 		self.map.draw(self.win)
 		self.missiles.draw(self.win)
+
+		if self.win != None:
+			for planet in self.planets:
+				planet.clouds.draw(self.win)
 		self.fuelbar.draw(self.win,self.player.fuel,100)
+		self.trail.draw(self.win, self.player.pos)
+		self.explosions.draw(self.win)
 		self.writeparameters()
-		self.trail.draw(self.win,self.player.pos)
 		if self.autotrail:
 			self.trail.autotrail(self.player)
 
@@ -261,15 +312,14 @@ class Display:
 				self.s.commit()
 			elif self.player.fuel < 0.1:
 				self.stopgame = True
+				self.s.save(self.player)
+				self.s.commit()
 
-			#print(np.abs(self.player.angle-90)%360)
 
 if __name__ == '__main__':
 	import os
 	files = os.listdir()
 	if "mydb" in files:
 		game = Display()
-		#print("already")
 	else:
-		#print("creating")
 		game = Display("create")

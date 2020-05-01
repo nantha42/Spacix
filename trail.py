@@ -7,6 +7,7 @@ class Trail:
         self.points = []
         self.dt = 0
         self.prevtime = time.time()
+        self.zoom = 1
     def addpoint(self,pos):
         x = pos[0]
         y = pos[1]
@@ -18,12 +19,11 @@ class Trail:
     def maintainlength(self):
         if len(self.points)>trailmaxlength:
             self.points.pop(0)
-            print(len(self.points))
 
     def draw(self,win,playerpos):
         for i in self.points:
-            x = i[0] - (playerpos[0]) + 520
-            y = i[1] - (playerpos[1]) + 520
+            x = (i[0] - (playerpos[0]))*self.zoom + 500
+            y = (i[1] - (playerpos[1]))*self.zoom + 500
             py.draw.circle(win,(255,255,255),(int(x),int(y)),1,1)
 
     def autotrail(self,player):

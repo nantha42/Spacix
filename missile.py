@@ -4,14 +4,18 @@ from config import *
 import time
 
 class Missile(py.sprite.Sprite):
-	def __init__(self, ship,name):
+	def __init__(self, ship,name,zoom):
 		super().__init__()
 		self.permimage = py.image.load("img/pmiss2.png")
-		self.permimage = py.transform.scale(self.permimage, (6, 6));
+		self.rectheight = 6
+		self.rectwidth = 6
 		self.image = None
 		self.rect = None
 		self.ships = ship
 		self.angle = ship.angle
+		self.zoom = zoom
+		self.old_zoom = 1
+		self.permimage = py.transform.scale(self.permimage, (int(self.rectwidth*self.zoom),int( self.rectheight*self.zoom)))
 		self.rot_center()
 
 		rad = (self.angle+90)*np.pi/180
@@ -28,12 +32,13 @@ class Missile(py.sprite.Sprite):
 		self.name = name
 		self.fuelmass = fuelinmiss
 		self.prevunit = np.array([np.cos(np.deg2rad(ship.angle))+90,np.sin(np.deg2rad(ship.angle))+90])
-		self.time = time.time();
+		self.time = time.time()
+		self.killme = False
 
 	def rot_center(self,x=None):
 		angle = x
 		if x == None:
-			angle = self.angle;
+			angle = self.angle
 
 		orig_rect = self.permimage.get_rect()
 		rot_image = py.transform.rotate(self.permimage, angle - 90)
@@ -41,9 +46,20 @@ class Missile(py.sprite.Sprite):
 		rot_rect.center = rot_image.get_rect().center
 		rot_image = rot_image.subsurface(rot_rect).copy()
 		self.image = rot_image
+		if self.zoom != self.old_zoom:
+			self.image = py.transform.scale(rot_image,
+											(int(self.rectwidth * self.zoom), int(self.rectheight * self.zoom)))
+			self.rect = self.image.get_rect()
+			self.old_zoom = self.zoom
+			print("Palyer zoom", self.zoom)
+		else:
+			self.image = rot_image
+			self.rect = self.image.get_rect()
+
 		self.rect = self.image.get_rect()
 		self.rect.x = 520
 		self.rect.y = 520
+
 		self.mask = py.mask.from_surface(self.image)
 
 	def update(self,planets):
@@ -51,10 +67,8 @@ class Missile(py.sprite.Sprite):
 
 		force = rocketexhaustmass*rocketexhaustvelocity*dt
 		self.fuelmass -= rocketexhaustmass*dt
-
 		if(self.fuelmass>0):
 			self.accel = force/(1+self.fuelmass)*np.array([np.cos(np.deg2rad(self.angle+90)),-np.sin(np.deg2rad(self.angle+90))])
-
 		else:
 			self.accel = np.linalg.norm([0.0,0.0])
 
@@ -73,7 +87,7 @@ class Missile(py.sprite.Sprite):
 
 		if(self.move==False):
 			#self.vel = np.array([0,0])
-			self.kill()
+			self.killme = True
 		#	print("Missile",self.name," destroyed")
 
 
@@ -81,19 +95,10 @@ class Missile(py.sprite.Sprite):
 		v = self.vel / np.linalg.norm(self.vel)
 		if np.linalg.norm(self.vel)>0:
 			unit = self.vel
+
 		ca = np.rad2deg(np.arccos(v[0]))
 		sa = np.rad2deg(np.arcsin(v[1]))
 
-		"""self.prevunit = unit;
-		ca = np.rad2deg(np.arccos(v[0]))
-		sa = np.rad2deg(np.arcsin(v[1]))
-		#print(ca,sa)
-		if  (ca > 90 and ca <=180)  and (sa < 0 and sa >-90):
-			self.rot_center(ca+270)
-		#elif sa > 0:
-		#	self.rot_center(ca+90)"""
-		"""if v[0]>0 and v[1]>0 :
-			self.rot_center(ca+270)"""
 
 		#######################################
 		self.vel += np.array(self.accel*dt,dtype=int)
@@ -104,10 +109,9 @@ class Missile(py.sprite.Sprite):
 
 		for i in planets:
 			if py.sprite.collide_mask(self, i):
-				print(self.rect.x,self.rect.y,i.rect.x,i.rect.y)
+				#print(self.rect.x,self.rect.y,i.rect.x,i.rect.y)
 				self.move = False
 		#print(time.time()-self.time)
 		if (time.time() - self.time) >missiledisappeartime:
 			#print("TImedout ",self.name)
-			self.kill()
-		#print(np.linalg.norm(self.ships.vel),np.linalg.norm(self.vel))
+			self.killme = True
